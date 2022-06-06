@@ -1163,7 +1163,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def async_set_art_mode(self):
         """Turn the media player on setting in art mode."""
-        await self._async_turn_on(True)
+        return await self._async_turn_on(True)
 
     def _turn_off(self):
         """Turn off media player."""
@@ -1190,18 +1190,13 @@ class SamsungTVDevice(MediaPlayerEntity):
         return True
 
     async def async_turn_off(self):
-        """Turn the media player on."""
-        result = await self.hass.async_add_executor_job(self._turn_off)
+        """Turn the media player off."""
+        if self._get_option(CONF_TOGGLE_ART_MODE, False):
+            result = await self.async_set_art_mode()
+        else:
+            result = await self.hass.async_add_executor_job(self._turn_off)
         if result:
             await self._async_switch_entity(False)
-
-    async def async_toggle(self):
-        """Toggle the power on the media player."""
-        if self.state == STATE_ON and self._ws.artmode_status != ArtModeStatus.Unsupported:
-            if self._get_option(CONF_TOGGLE_ART_MODE, False):
-                await self.async_set_art_mode()
-                return
-        await super().async_toggle()
 
     async def async_volume_up(self):
         """Volume up the media player."""
